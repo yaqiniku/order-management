@@ -27,7 +27,8 @@ public class AppDbContext : DbContext
             entity.HasKey(x => x.ID);
 
             entity.Property(x => x.ID)
-                .HasColumnName("id");
+                .HasColumnName("id")
+                .ValueGeneratedNever();
 
             entity.Property(x => x.FullName)
                 .HasColumnName("full_name")
@@ -41,6 +42,9 @@ public class AppDbContext : DbContext
             entity.Property(x => x.PhoneNo)
                 .HasColumnName("phone_no")
                 .HasMaxLength(50);
+
+            entity.Property(x => x.Address)
+                .HasColumnName("address");
 
             entity.Property(x => x.CreDate)
                 .HasColumnName("cre_date");
@@ -135,7 +139,8 @@ public class AppDbContext : DbContext
             entity.HasKey(x => x.ID);
 
             entity.Property(x => x.ID)
-                .HasColumnName("id");
+                .HasColumnName("id")
+                .ValueGeneratedNever();
 
             entity.Property(x => x.OrderID)
                 .HasColumnName("order_id")
@@ -153,6 +158,12 @@ public class AppDbContext : DbContext
                 .HasColumnName("amount")
                 .HasPrecision(18, 2)
                 .IsRequired();
+
+            entity.Property(x => x.CreDate)
+                .HasColumnName("cre_date");
+
+            entity.Property(x => x.ModDate)
+                .HasColumnName("mod_date");
 
             entity.HasOne<Order>()
                 .WithMany()

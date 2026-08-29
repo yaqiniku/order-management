@@ -29,7 +29,8 @@ namespace DAL.Migrations
                         .HasColumnName("id");
 
                     b.Property<string>("Address")
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("address");
 
                     b.Property<DateTime?>("CreDate")
                         .HasColumnType("timestamp with time zone")
@@ -105,12 +106,9 @@ namespace DAL.Migrations
 
             modelBuilder.Entity("Domain.Models.OrderDetail", b =>
                 {
-                    b.Property<long?>("ID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
+                    b.Property<string>("ID")
+                        .HasColumnType("text")
                         .HasColumnName("id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long?>("ID"));
 
                     b.Property<decimal?>("Amount")
                         .IsRequired()
@@ -119,10 +117,12 @@ namespace DAL.Migrations
                         .HasColumnName("amount");
 
                     b.Property<DateTime?>("CreDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("cre_date");
 
                     b.Property<DateTime?>("ModDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("mod_date");
 
                     b.Property<string>("OrderID")
                         .IsRequired()

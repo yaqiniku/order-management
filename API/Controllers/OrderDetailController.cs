@@ -6,9 +6,9 @@ namespace API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class CustomerController(ICustomerService service) : ControllerBase
+public class OrderDetailController(IOrderDetailService service) : ControllerBase
 {
-    private readonly ICustomerService _service = service;
+    private readonly IOrderDetailService _service = service;
 
     [HttpGet("GetRows")]
     public async Task<ActionResult> GetRows(string? keyword, int offset = 0, int limit = 10)
@@ -27,31 +27,31 @@ public class CustomerController(ICustomerService service) : ControllerBase
         try
         {
             var data = await _service.GetRow(id);
-            if (data is null) return NotFound(new { message = $"Customer dengan ID '{id}' tidak ditemukan." });
+            if (data is null) return NotFound(new { message = $"OrderDetail dengan ID '{id}' tidak ditemukan." });
             return Ok(new { data });
         }
         catch (Exception ex) { return ResponseError(ex); }
     }
 
     [HttpPost("Insert")]
-    public async Task<ActionResult> Insert([FromBody] Customer customer)
+    public async Task<ActionResult> Insert([FromBody] OrderDetail orderDetail)
     {
         try
         {
-            var affectedRows = await _service.Insert(customer);
-            return Ok(new { data = new { customer.ID }, affectedRows });
+            var affectedRows = await _service.Insert(orderDetail);
+            return Ok(new { data = new { orderDetail.ID }, affectedRows });
         }
         catch (Exception ex) { return ResponseError(ex); }
     }
 
     [HttpPut("Update")]
-    public async Task<ActionResult> Update([FromBody] Customer customer)
+    public async Task<ActionResult> Update([FromBody] OrderDetail orderDetail)
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(customer.ID)) throw new Exception("ID customer wajib diisi.");
-            var affectedRows = await _service.Update(customer);
-            if (affectedRows == 0) throw new Exception($"Customer dengan ID '{customer.ID}' tidak ditemukan.");
+            if (string.IsNullOrWhiteSpace(orderDetail.ID)) throw new Exception("ID order detail wajib diisi.");
+            var affectedRows = await _service.Update(orderDetail);
+            if (affectedRows == 0) throw new Exception($"OrderDetail dengan ID '{orderDetail.ID}' tidak ditemukan.");
             return Ok(new { affectedRows });
         }
         catch (Exception ex) { return ResponseError(ex); }
@@ -62,7 +62,7 @@ public class CustomerController(ICustomerService service) : ControllerBase
     {
         try
         {
-            if (ids.Length == 0) return BadRequest(new { message = "Minimal satu ID customer wajib diisi." });
+            if (ids.Length == 0) return BadRequest(new { message = "Minimal satu ID order detail wajib diisi." });
             var affectedRows = await _service.Delete(ids);
             return Ok(new { data = (object?)null, affectedRows });
         }

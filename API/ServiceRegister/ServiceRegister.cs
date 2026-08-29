@@ -25,6 +25,12 @@ public static class ServiceRegister
 
         services.AddScoped<IOrderRepositry, OrderRepository>();
         services.AddScoped<IOrderService, OrderService>();
+        services.AddScoped<ICustomerRepository, CustomerRepository>();
+        services.AddScoped<ICustomerService, CustomerService>();
+        services.AddScoped<IProductRepository, ProductRepository>();
+        services.AddScoped<IProductService, ProductService>();
+        services.AddScoped<IOrderDetailRepository, OrderDetailRepository>();
+        services.AddScoped<IOrderDetailService, OrderDetailService>();
 
         return services;
     }

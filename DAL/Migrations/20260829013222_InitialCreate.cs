@@ -1,6 +1,5 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
-using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
@@ -20,7 +19,7 @@ namespace DAL.Migrations
                     full_name = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: false),
                     email = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: true),
                     phone_no = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
-                    Address = table.Column<string>(type: "text", nullable: true),
+                    address = table.Column<string>(type: "text", nullable: true),
                     cre_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     mod_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
@@ -73,14 +72,13 @@ namespace DAL.Migrations
                 name: "order_detail",
                 columns: table => new
                 {
-                    id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    id = table.Column<string>(type: "text", nullable: false),
                     order_id = table.Column<string>(type: "text", nullable: false),
                     product_id = table.Column<string>(type: "text", nullable: false),
                     quantity = table.Column<int>(type: "integer", nullable: false),
                     amount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
-                    CreDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    ModDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    cre_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    mod_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
