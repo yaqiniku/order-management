@@ -10,6 +10,18 @@ public class OrderController(IOrderService service) : ControllerBase
 {
     private readonly IOrderService _service = service;
 
+    [HttpGet("GenerateIdempotencyKey")]
+    public ActionResult GenerateIdempotencyKey()
+    {
+        var idempotencyKey = _service.GenerateIdempotencyKey();
+
+        return Ok(new
+        {
+            data = new { idempotencyKey }
+        });
+    }
+
+
     [HttpGet("GetRows")]
     public async Task<ActionResult> GetRows( string? keyword, int offset = 0, int limit = 10)
     {
@@ -45,12 +57,22 @@ public class OrderController(IOrderService service) : ControllerBase
     }
 
     [HttpPost("Insert")]
-    public async Task<ActionResult> Insert([FromBody] Order order)
+    public async Task<ActionResult> Insert([FromHeader(Name = "Idempotency-Key")] string? idempotencyKey, [FromBody] Order order)
     {
         try
         {
-            var affectedRows = await _service.Insert(order);
-            return Ok(new { data = new { order.ID }, affectedRows });
+            if (string.IsNullOrWhiteSpace(idempotencyKey))
+            {
+                throw new Exception("Header Idempotency-Key wajib diisi.");
+            }
+
+            var affectedRows = await _service.Insert(order, idempotencyKey);
+
+            return Ok(new
+            {
+                data = new { order.ID },
+                affectedRows
+            });
         }
         catch (Exception ex)
         {
@@ -63,11 +85,6 @@ public class OrderController(IOrderService service) : ControllerBase
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(order.ID))
-            {
-                throw new Exception("ID order wajib diisi.");
-            }
-
             var affectedRows = await _service.Update(order);
 
             if (affectedRows == 0)

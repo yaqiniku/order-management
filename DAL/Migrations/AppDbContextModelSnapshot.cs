@@ -25,11 +25,11 @@ namespace DAL.Migrations
             modelBuilder.Entity("Domain.Models.Customer", b =>
                 {
                     b.Property<string>("ID")
-                        .HasColumnType("text")
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("id");
 
                     b.Property<string>("Address")
-                        .HasColumnType("text")
+                        .HasColumnType("character varying(4000)")
                         .HasColumnName("address");
 
                     b.Property<DateTime?>("CreDate")
@@ -64,8 +64,14 @@ namespace DAL.Migrations
             modelBuilder.Entity("Domain.Models.Order", b =>
                 {
                     b.Property<string>("ID")
-                        .HasColumnType("text")
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("id");
+
+                    b.Property<string>("IdempotencyKey")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("idempotency_key");
 
                     b.Property<DateTime?>("CreDate")
                         .HasColumnType("timestamp with time zone")
@@ -73,7 +79,7 @@ namespace DAL.Migrations
 
                     b.Property<string>("CustomerID")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("customer_id");
 
                     b.Property<DateTime?>("ModDate")
@@ -82,7 +88,7 @@ namespace DAL.Migrations
 
                     b.Property<string>("ShippingAddress")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasColumnType("character varying(150)")
                         .HasColumnName("shipping_address");
 
                     b.Property<string>("Status")
@@ -101,13 +107,16 @@ namespace DAL.Migrations
 
                     b.HasIndex("CustomerID");
 
+                    b.HasIndex("IdempotencyKey")
+                        .IsUnique();
+
                     b.ToTable("orders", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Models.OrderDetail", b =>
                 {
                     b.Property<string>("ID")
-                        .HasColumnType("text")
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("id");
 
                     b.Property<decimal?>("Amount")
@@ -126,7 +135,7 @@ namespace DAL.Migrations
 
                     b.Property<string>("OrderID")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("order_id");
 
                     b.Property<string>("ProductID")
@@ -154,7 +163,7 @@ namespace DAL.Migrations
             modelBuilder.Entity("Domain.Models.Product", b =>
                 {
                     b.Property<string>("ID")
-                        .HasColumnType("text")
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("id");
 
                     b.Property<DateTime?>("CreDate")

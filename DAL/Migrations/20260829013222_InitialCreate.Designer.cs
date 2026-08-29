@@ -28,11 +28,11 @@ namespace DAL.Migrations
             modelBuilder.Entity("Domain.Models.Customer", b =>
                 {
                     b.Property<string>("ID")
-                        .HasColumnType("text")
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("id");
 
                     b.Property<string>("Address")
-                        .HasColumnType("text")
+                        .HasColumnType("character varying(150)")
                         .HasColumnName("address");
 
                     b.Property<DateTime?>("CreDate")
@@ -67,7 +67,7 @@ namespace DAL.Migrations
             modelBuilder.Entity("Domain.Models.Order", b =>
                 {
                     b.Property<string>("ID")
-                        .HasColumnType("text")
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("id");
 
                     b.Property<DateTime?>("CreDate")
@@ -85,7 +85,7 @@ namespace DAL.Migrations
 
                     b.Property<string>("ShippingAddress")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasColumnType("character varying(150)")
                         .HasColumnName("shipping_address");
 
                     b.Property<string>("Status")
@@ -110,7 +110,7 @@ namespace DAL.Migrations
             modelBuilder.Entity("Domain.Models.OrderDetail", b =>
                 {
                     b.Property<string>("ID")
-                        .HasColumnType("text")
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("id");
 
                     b.Property<decimal?>("Amount")
@@ -129,12 +129,12 @@ namespace DAL.Migrations
 
                     b.Property<string>("OrderID")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("order_id");
 
                     b.Property<string>("ProductID")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("product_id");
 
                     b.Property<int?>("Quantity")
@@ -157,7 +157,7 @@ namespace DAL.Migrations
             modelBuilder.Entity("Domain.Models.Product", b =>
                 {
                     b.Property<string>("ID")
-                        .HasColumnType("text")
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("id");
 
                     b.Property<DateTime?>("CreDate")

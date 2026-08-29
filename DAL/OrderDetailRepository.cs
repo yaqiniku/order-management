@@ -34,20 +34,48 @@ public class OrderDetailRepository(AppDbContext context) : BaseRepository(contex
 
     public Task<OrderDetail?> GetRow(IDbTransaction transaction, string id)
     {
+        var p = db.Symbol();
         var query = $@"
             select od.id as ID, od.order_id as OrderID, od.product_id as ProductID,
                    od.quantity as Quantity, od.amount as Amount,
                    od.cre_date as CreDate, od.mod_date as ModDate
-            from order_detail od where od.id = {db.Symbol()}ID";
+            from order_detail od where od.id = {p}ID";
         return _command.GetRow<OrderDetail>(transaction, query, new { ID = id });
+    }
+
+    public Task<List<OrderDetail>> GetByOrderID(IDbTransaction transaction, string orderId)
+    {
+        var p = db.Symbol();
+        var query = $@"
+            select 
+                    od.id as ID
+                    ,od.order_id as OrderID
+                    ,od.product_id as ProductID,
+                   od.quantity as Quantity
+                   ,od.amount as Amount,
+                   od.cre_date as CreDate
+                   ,od.mod_date as ModDate
+            from 
+                    order_detail od
+            where 
+                    od.order_id = {p}OrderID
+            order by od.product_id";
+
+        return _command.GetRows<OrderDetail>(
+            transaction,
+            query,
+            new { OrderID = orderId });
     }
 
     public Task<int> Insert(IDbTransaction transaction, OrderDetail orderDetail)
     {
         var p = db.Symbol();
         var query = $@"
-            insert into order_detail (id, order_id, product_id, quantity, amount, cre_date, mod_date)
-            values ({p}ID, {p}OrderID, {p}ProductID, {p}Quantity, {p}Amount, {p}CreDate, {p}ModDate)";
+            insert into order_detail 
+            (id, order_id, product_id, quantity, amount, cre_date, mod_date)
+            values 
+            ({p}ID, {p}OrderID, {p}ProductID, {p}Quantity, {p}Amount, {p}CreDate, {p}ModDate)
+            ";
         return _command.Insert(transaction, query, orderDetail);
     }
 
@@ -56,15 +84,19 @@ public class OrderDetailRepository(AppDbContext context) : BaseRepository(contex
         var p = db.Symbol();
         var query = $@"
             update order_detail
-            set order_id = {p}OrderID, product_id = {p}ProductID, quantity = {p}Quantity,
-                amount = {p}Amount, cre_date = {p}CreDate, mod_date = {p}ModDate
-            where id = {p}ID";
+            set 
+                quantity = {p}Quantity
+                ,amount = {p}Amount
+                ,mod_date = {p}ModDate
+            where 
+                id = {p}ID";
         return _command.Update(transaction, query, orderDetail);
     }
 
     public Task<int> DeleteByID(IDbTransaction transaction, string id)
     {
-        var query = $"delete from order_detail where id = {db.Symbol()}ID";
+        var p = db.Symbol();
+        var query = $"delete from order_detail where id = {p}ID";
         return _command.Delete(transaction, query, new { ID = id });
     }
 }

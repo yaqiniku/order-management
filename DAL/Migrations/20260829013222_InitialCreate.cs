@@ -15,11 +15,11 @@ namespace DAL.Migrations
                 name: "customer",
                 columns: table => new
                 {
-                    id = table.Column<string>(type: "text", nullable: false),
+                    id = table.Column<string>(type: "character varying(50)", nullable: false),
                     full_name = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: false),
                     email = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: true),
                     phone_no = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
-                    address = table.Column<string>(type: "text", nullable: true),
+                    address = table.Column<string>(type: "character varying(150)", nullable: true),
                     cre_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     mod_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
@@ -32,7 +32,7 @@ namespace DAL.Migrations
                 name: "product",
                 columns: table => new
                 {
-                    id = table.Column<string>(type: "text", nullable: false),
+                    id = table.Column<string>(type: "character varying(50)", nullable: false),
                     quantity = table.Column<int>(type: "integer", nullable: false),
                     price = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
                     product_name = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: false),
@@ -49,10 +49,10 @@ namespace DAL.Migrations
                 name: "orders",
                 columns: table => new
                 {
-                    id = table.Column<string>(type: "text", nullable: false),
-                    customer_id = table.Column<string>(type: "text", nullable: false),
+                    id = table.Column<string>(type: "character varying(50)", nullable: false),
+                    customer_id = table.Column<string>(type: "character varying(50)", nullable: false),
                     status = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    shipping_address = table.Column<string>(type: "text", nullable: false),
+                    shipping_address = table.Column<string>(type: "character varying(150)", nullable: false),
                     total_amount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
                     cre_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     mod_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
@@ -72,9 +72,9 @@ namespace DAL.Migrations
                 name: "order_detail",
                 columns: table => new
                 {
-                    id = table.Column<string>(type: "text", nullable: false),
-                    order_id = table.Column<string>(type: "text", nullable: false),
-                    product_id = table.Column<string>(type: "text", nullable: false),
+                    id = table.Column<string>(type: "character varying(50)", nullable: false),
+                    order_id = table.Column<string>(type: "character varying(50)", nullable: false),
+                    product_id = table.Column<string>(type: "character varying(50)", nullable: false),
                     quantity = table.Column<int>(type: "integer", nullable: false),
                     amount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
                     cre_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),

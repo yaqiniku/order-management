@@ -19,17 +19,18 @@ public class OrderRepository(AppDbContext context) : BaseRepository(context), IO
         string query = $@"
                             select
                                 o.id as ID
-                                ,0.customer_id as CustomerID
-                                ,0.status as Status 
-                                ,0.shipping_address as ShippingAddress
-                                ,0.total_amount as TotalAmount
-                                ,0.cre_date as CreDate
-                                ,0.mod_date as ModDate
+                                ,o.customer_id as CustomerID
+                                ,o.status as Status
+                                ,o.shipping_address as ShippingAddress
+                                ,o.total_amount as TotalAmount
+                                ,o.idempotency_key as IdempotencyKey
+                                ,o.cre_date as CreDate
+                                ,o.mod_date as ModDate
                             from 
                                 orders o
                             where
                             (
-                                lower(0.customer_id) like lower({p}Keyword)
+                                lower(o.customer_id) like lower({p}Keyword)
 								or cast(o.status as varchar) like lower({p}Keyword)
 								or lower(o.shipping_address) like lower({p}Keyword)
 								or lower(o.total_amount) like lower({p}Keyword)
@@ -59,12 +60,13 @@ public class OrderRepository(AppDbContext context) : BaseRepository(context), IO
         string query = $@"
                             select
                                 o.id as ID
-                                ,0.customer_id as CustomerID
-                                ,0.status as Status 
-                                ,0.shipping_address as ShippingAddress
-                                ,0.total_amount as TotalAmount
-                                ,0.cre_date as CreDate
-                                ,0.mod_date as ModDate
+                                ,o.customer_id as CustomerID
+                                ,o.status as Status
+                                ,o.shipping_address as ShippingAddress
+                                ,o.total_amount as TotalAmount
+                                ,o.idempotency_key as IdempotencyKey
+                                ,o.cre_date as CreDate
+                                ,o.mod_date as ModDate
                             from 
                                 orders o
                             where
@@ -81,6 +83,56 @@ public class OrderRepository(AppDbContext context) : BaseRepository(context), IO
         return result;
     }
 
+    public Task<Order?> GetRowForUpdate(IDbTransaction transaction, string id)
+    {
+        string p = db.Symbol();
+
+        string query = $@"
+                            select
+                                o.id as ID
+                                ,o.customer_id as CustomerID
+                                ,o.status as Status
+                                ,o.shipping_address as ShippingAddress
+                                ,o.total_amount as TotalAmount
+                                ,o.idempotency_key as IdempotencyKey
+                                ,o.cre_date as CreDate
+                                ,o.mod_date as ModDate
+                            from
+                                orders o
+                            where
+                                o.id = {p}ID
+                            for update
+                        ";
+
+        return _command.GetRow<Order>(transaction, query, new { ID = id });
+    }
+
+    public Task<Order?> GetByIdempotencyKey(IDbTransaction transaction, string idempotencyKey)
+    {
+        string p = db.Symbol();
+
+        string query = $@"
+                            select
+                                o.id as ID
+                                ,o.customer_id as CustomerID
+                                ,o.status as Status
+                                ,o.shipping_address as ShippingAddress
+                                ,o.total_amount as TotalAmount
+                                ,o.idempotency_key as IdempotencyKey
+                                ,o.cre_date as CreDate
+                                ,o.mod_date as ModDate
+                            from
+                                orders o
+                            where
+                                o.idempotency_key = {p}IdempotencyKey
+                        ";
+
+        return _command.GetRow<Order>(
+            transaction,
+            query,
+            new { IdempotencyKey = idempotencyKey });
+    }
+
     public async Task<int> Insert(IDbTransaction transaction, Order order)
     {
         string p = db.Symbol();
@@ -93,6 +145,7 @@ public class OrderRepository(AppDbContext context) : BaseRepository(context), IO
                                 ,status
                                 ,shipping_address
                                 ,total_amount
+                                ,idempotency_key
                                 ,cre_date
 								,mod_date
 							)
@@ -101,29 +154,46 @@ public class OrderRepository(AppDbContext context) : BaseRepository(context), IO
 								{p}ID
 								,{p}CustomerID
 								,{p}Status
-								,{p}ShippingAddress
-								,{p}TotalAmount
-								,{p}CreDate
-								,{p}ModDate
+                                ,{p}ShippingAddress
+                                ,{p}TotalAmount
+                                ,{p}IdempotencyKey
+                                ,{p}CreDate
+                                ,{p}ModDate
 							)
+						on conflict (idempotency_key) do nothing
                         ";
 
         return await _command.Insert(transaction, query, order);
     }
 
-    public async Task<int> UpdateByID(IDbTransaction transaction,Order order)
+    public async Task<int> UpdateByID(IDbTransaction transaction, Order order)
     {
         string p = db.Symbol();
 
       string query = $@"
-                        update order
+                        update orders
                         set
                             customer_id = {p}CustomerID
-                            status = {p}Status
-                            shipping_address = {p}ShippingAddress
+                            ,status = {p}Status
+                            ,shipping_address = {p}ShippingAddress
+                            ,total_amount = {p}TotalAmount
+                            ,mod_date = {p}ModDate
+                        where
+                            id = {p}ID
+					 ";
+
+      return await _command.Update(transaction, query, order);
+    }
+
+    public async Task<int> UpdateTotalAmount(IDbTransaction transaction, Order order)
+    {
+        string p = db.Symbol();
+
+      string query = $@"
+                        update orders
+                        set
                             total_amount = {p}TotalAmount
-                            cre_date = {p}CreDate
-                            mod_date = {p}ModDate
+                            ,mod_date = {p}ModDate
                         where
                             id = {p}ID
 					 ";

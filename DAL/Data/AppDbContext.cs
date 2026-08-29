@@ -119,6 +119,14 @@ public class AppDbContext : DbContext
                 .HasPrecision(18, 2)
                 .IsRequired();
 
+            entity.Property(x => x.IdempotencyKey)
+                .HasColumnName("idempotency_key")
+                .HasMaxLength(100)
+                .IsRequired();
+
+            entity.HasIndex(x => x.IdempotencyKey)
+                .IsUnique();
+
             entity.Property(x => x.CreDate)
                 .HasColumnName("cre_date");
 
