@@ -8,5 +8,6 @@ namespace Domain.Models
 		public string? PhoneNo { get; set; }
 		public string? Address { get; set; }
         public DateTime? CreDate { get; set; }
+        public DateTime? ModDate { get; set; }
     }
 }
