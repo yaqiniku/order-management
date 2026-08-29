@@ -1,54 +1,60 @@
-using DAL.Data;
-using Microsoft.EntityFrameworkCore;
+using API.ServiceRegister;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Load API/.env
-var envFile = Path.Combine(
-    builder.Environment.ContentRootPath,
-    ".env"
-);
-
-if (!File.Exists(envFile))
+var envFileCandidates = new[]
 {
-    envFile = Path.Combine(
-        AppContext.BaseDirectory,
-        ".env"
-    );
+    Path.Combine(builder.Environment.ContentRootPath, ".env"),
+    Path.Combine(builder.Environment.ContentRootPath, "API", ".env"),
+    Path.Combine(AppContext.BaseDirectory, ".env")
+};
+
+var envFile = envFileCandidates.FirstOrDefault(File.Exists);
+
+if (envFile is not null)
+{
+    var envValues = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
+
+    foreach (var line in File.ReadLines(envFile))
+    {
+        var trimmedLine = line.Trim();
+
+        if (trimmedLine.Length == 0 || trimmedLine.StartsWith('#'))
+        {
+            continue;
+        }
+
+        var separatorIndex = trimmedLine.IndexOf('=');
+
+        if (separatorIndex > 0)
+        {
+            envValues[trimmedLine[..separatorIndex].Trim()] =
+                trimmedLine[(separatorIndex + 1)..].Trim();
+        }
+    }
+
+    builder.Configuration.AddInMemoryCollection(envValues);
 }
 
-builder.Configuration
-    .AddIniFile(
-        envFile,
-        optional: true,
-        reloadOnChange: false
-    )
-    .AddEnvironmentVariables();
+builder.Configuration.AddEnvironmentVariables();
 
-var dbHost = builder.Configuration["DB_HOST"];
-var dbPort = builder.Configuration["DB_PORT"];
-var dbName = builder.Configuration["DB_NAME"];
-var dbUsername = builder.Configuration["DB_USERNAME"];
-var dbPassword = builder.Configuration["DB_PASSWORD"];
+// Add services
+builder.Services.AddService(builder.Configuration);
 
-var connectionString =
-    $"Host={dbHost};" +
-    $"Port={dbPort};" +
-    $"Database={dbName};" +
-    $"Username={dbUsername};" +
-    $"Password={dbPassword};";
-
-// Controller
 builder.Services.AddControllers();
 
-// Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Database
-builder.Services.AddDbContext<AppDbContext>(options =>
+builder.Services.AddCors(options =>
 {
-    options.UseNpgsql(connectionString);
+    options.AddDefaultPolicy(policy =>
+    {
+        policy
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowAnyOrigin();
+    });
 });
 
 var app = builder.Build();
@@ -60,6 +66,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors();
 
 app.MapControllers();
 
