@@ -8,6 +8,9 @@ public interface IOrderDetailRepository
     IDbConnection GetDbConnection();
     Task<List<OrderDetail>> GetRows(IDbTransaction transaction, string? keyword, int offset, int limit);
     Task<OrderDetail?> GetRow(IDbTransaction transaction, string id);
+    Task<OrderDetail?> GetRowForUpdate(
+        IDbTransaction transaction,
+        string id);
     Task<List<OrderDetail>> GetByOrderID(
         IDbTransaction transaction,
         string orderId);

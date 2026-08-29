@@ -119,6 +119,62 @@ public class OrderController(IOrderService service) : ControllerBase
         }
     }
 
+    [HttpPut("Confirm")]
+    public async Task<ActionResult> Confirm([FromBody] Order model)
+    {
+        try
+        {
+            var affectedRows = await _service.Confirm(model);
+            return Ok(new { affectedRows });
+        }
+        catch (Exception ex)
+        {
+            return ResponseError(ex);
+        }
+    }
+
+    [HttpPut("Ship")]
+    public async Task<ActionResult> Ship([FromBody] Order model)
+    {
+        try
+        {
+            var affectedRows = await _service.Ship(model);
+            return Ok(new { affectedRows });
+        }
+        catch (Exception ex)
+        {
+            return ResponseError(ex);
+        }
+    }
+
+    [HttpPut("Deliver")]
+    public async Task<ActionResult> Deliver([FromBody] Order model)
+    {
+        try
+        {
+            var affectedRows = await _service.Deliver(model);
+            return Ok(new { affectedRows });
+        }
+        catch (Exception ex)
+        {
+            return ResponseError(ex);
+        }
+    }
+
+    [HttpPut("Cancel")]
+    public async Task<ActionResult> Cancel([FromBody] Order model)
+    {
+        try
+        {
+            var affectedRows = await _service.Cancel(model);
+            return Ok(new { affectedRows });
+        }
+        catch (Exception ex)
+        {
+            return ResponseError(ex);
+        }
+    }
+
     private ObjectResult ResponseError(Exception exception)
     {
         return StatusCode(StatusCodes.Status500InternalServerError, new

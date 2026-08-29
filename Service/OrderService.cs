@@ -185,7 +185,7 @@ public class OrderService(IOrderRepositry repository, IOrderDetailRepository rep
                 throw new InvalidOperationException("Detail hanya dapat diubah ketika order masih PENDING.");
             }
 
-            var existingItems = await _repoDetail.GetByOrderID(transaction, order.ID);
+            var existingItems = await _repoDetail.GetByOrderID(transaction, order.ID!);
 
             var oldItemsByProduct = existingItems.ToDictionary(x => x.ProductID!,StringComparer.OrdinalIgnoreCase);
 
@@ -349,5 +349,136 @@ public class OrderService(IOrderRepositry repository, IOrderDetailRepository rep
             transaction.Rollback();
             throw;
         }
+    }
+
+    public async Task<int> Confirm(Order order)
+    {
+        return await ChangeStatus(order, "PENDING", "CONFIRMED");
+    }
+
+    public async Task<int> Ship(Order order)
+    {
+        return await ChangeStatus(order, "CONFIRMED", "SHIPPED");
+    }
+
+    public async Task<int> Deliver(Order order)
+    {
+        return await ChangeStatus(order, "SHIPPED", "DELIVERED");
+    }
+
+    public async Task<int> Cancel(Order order)
+    {
+        EnsureOrderIdIsProvided(order);
+
+        using var connection = _repository.GetDbConnection();
+        using var transaction = connection.BeginTransaction();
+
+        try
+        {
+            var existingOrder = await _repository.GetRowForUpdate(transaction, order.ID!);
+
+            if (existingOrder is null)
+            {
+                throw new KeyNotFoundException($"Order dengan ID '{order.ID}' tidak ditemukan.");
+            }
+
+            if (!string.Equals(existingOrder.Status, "PENDING", StringComparison.OrdinalIgnoreCase)
+                && !string.Equals(existingOrder.Status, "CONFIRMED", StringComparison.OrdinalIgnoreCase))
+            {
+                throw InvalidTransition(existingOrder.Status, "CANCELLED");
+            }
+
+            var items = await _repoDetail.GetByOrderID(transaction, order.ID!);
+
+            // Product dikunci secara terurut agar beberapa cancel tidak saling deadlock.
+            foreach (var itemGroup in items
+                         .GroupBy(item => item.ProductID!, StringComparer.OrdinalIgnoreCase)
+                         .OrderBy(group => group.Key, StringComparer.OrdinalIgnoreCase))
+            {
+                var product = await _repoProduct.GetProductStock(transaction, itemGroup.Key);
+
+                if (product is null)
+                {
+                    throw new KeyNotFoundException($"Product '{itemGroup.Key}' tidak ditemukan.");
+                }
+
+                product.Quantity = (product.Quantity ?? 0) + itemGroup.Sum(item => item.Quantity ?? 0);
+                product.ModDate = DateTime.UtcNow;
+
+                await _repoProduct.UpdateQty(transaction, product);
+            }
+
+            order.Status = "CANCELLED";
+            order.ModDate = DateTime.UtcNow;
+            var result = await _repository.UpdateStatus(transaction, order);
+
+            if (result == 0)
+            {
+                throw new InvalidOperationException("Status order gagal diperbarui.");
+            }
+
+            transaction.Commit();
+            return result;
+        }
+        catch (Exception)
+        {
+            transaction.Rollback();
+            throw;
+        }
+    }
+
+    private async Task<int> ChangeStatus(Order order, string expectedStatus, string newStatus)
+    {
+        EnsureOrderIdIsProvided(order);
+
+        using var connection = _repository.GetDbConnection();
+        using var transaction = connection.BeginTransaction();
+
+        try
+        {
+            var existingOrder = await _repository.GetRowForUpdate(transaction, order.ID!);
+
+            if (existingOrder is null)
+            {
+                throw new KeyNotFoundException($"Order dengan ID '{order.ID}' tidak ditemukan.");
+            }
+
+            if (!string.Equals(existingOrder.Status, expectedStatus, StringComparison.OrdinalIgnoreCase))
+            {
+                throw InvalidTransition(existingOrder.Status, newStatus);
+            }
+
+            order.Status = newStatus;
+            order.ModDate = DateTime.UtcNow;
+
+            var result = await _repository.UpdateStatus(transaction, order);
+
+            if (result == 0)
+            {
+                throw new InvalidOperationException("Status order gagal diperbarui.");
+            }
+
+            transaction.Commit();
+            return result;
+        }
+        catch (Exception)
+        {
+            transaction.Rollback();
+            throw;
+        }
+    }
+
+    private static void EnsureOrderIdIsProvided(Order order)
+    {
+        if (string.IsNullOrWhiteSpace(order.ID))
+        {
+            throw new ArgumentException("ID order wajib diisi.");
+        }
+    }
+
+    private static InvalidOperationException InvalidTransition(string? currentStatus, string newStatus)
+    {
+        return new InvalidOperationException(
+            $"Status order tidak dapat diubah dari '{currentStatus ?? "UNKNOWN"}' menjadi '{newStatus}'.");
     }
 }

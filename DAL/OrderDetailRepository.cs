@@ -43,6 +43,24 @@ public class OrderDetailRepository(AppDbContext context) : BaseRepository(contex
         return _command.GetRow<OrderDetail>(transaction, query, new { ID = id });
     }
 
+    public Task<OrderDetail?> GetRowForUpdate(
+        IDbTransaction transaction,
+        string id)
+    {
+        var query = $@"
+            select od.id as ID, od.order_id as OrderID, od.product_id as ProductID,
+                   od.quantity as Quantity, od.amount as Amount,
+                   od.cre_date as CreDate, od.mod_date as ModDate
+            from order_detail od
+            where od.id = {db.Symbol()}ID
+            for update";
+
+        return _command.GetRow<OrderDetail>(
+            transaction,
+            query,
+            new { ID = id });
+    }
+
     public Task<List<OrderDetail>> GetByOrderID(IDbTransaction transaction, string orderId)
     {
         var p = db.Symbol();

@@ -185,6 +185,22 @@ public class OrderRepository(AppDbContext context) : BaseRepository(context), IO
       return await _command.Update(transaction, query, order);
     }
 
+    public async Task<int> UpdateStatus(IDbTransaction transaction, Order order)
+    {
+        string p = db.Symbol();
+
+      string query = $@"
+                        update orders
+                        set
+                            status = {p}Status
+                            ,mod_date = {p}ModDate
+                        where
+                            id = {p}ID
+					 ";
+
+      return await _command.Update(transaction, query, order);
+    }
+
     public async Task<int> UpdateTotalAmount(IDbTransaction transaction, Order order)
     {
         string p = db.Symbol();

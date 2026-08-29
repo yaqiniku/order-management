@@ -11,4 +11,8 @@ public interface IOrderService
     Task<int> Update(Order order);
     Task<int> Delete(string[] ids);
     Task<int> DeleteByID(string id);
+    Task<int> Confirm(Order order);
+    Task<int> Ship(Order order);
+    Task<int> Deliver(Order order);
+    Task<int> Cancel(Order order);
 }
