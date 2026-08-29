@@ -1,6 +1,7 @@
 using Domain.Abstract.Service;
 using Domain.Models;
 using Microsoft.AspNetCore.Mvc;
+using API.Infrastructure;
 
 namespace API.Controllers;
 
@@ -45,7 +46,7 @@ public class OrderController(IOrderService service) : ControllerBase
 
             if (data is null)
             {
-                return NotFound(new { message = $"Order dengan ID '{id}' tidak ditemukan." });
+                return NotFound(ApiErrors.Create(HttpContext, "not_found", $"Order dengan ID '{id}' tidak ditemukan."));
             }
 
             return Ok(new { data });
@@ -63,7 +64,7 @@ public class OrderController(IOrderService service) : ControllerBase
         {
             if (string.IsNullOrWhiteSpace(idempotencyKey))
             {
-                throw new Exception("Header Idempotency-Key wajib diisi.");
+                throw new ArgumentException("Header Idempotency-Key wajib diisi.");
             }
 
             var affectedRows = await _service.Insert(order, idempotencyKey);
@@ -89,7 +90,7 @@ public class OrderController(IOrderService service) : ControllerBase
 
             if (affectedRows == 0)
             {
-                throw new Exception($"Order dengan ID '{order.ID}' tidak ditemukan.");
+                throw new KeyNotFoundException($"Order dengan ID '{order.ID}' tidak ditemukan.");
             }
 
             return Ok(new {affectedRows });
@@ -107,7 +108,7 @@ public class OrderController(IOrderService service) : ControllerBase
         {
             if (ids.Length == 0)
             {
-                return BadRequest(new { message = "Minimal satu ID order wajib diisi." });
+                return BadRequest(ApiErrors.Create(HttpContext, "validation_error", "Minimal satu ID order wajib diisi."));
             }
 
             var affectedRows = await _service.Delete(ids);
@@ -177,10 +178,10 @@ public class OrderController(IOrderService service) : ControllerBase
 
     private ObjectResult ResponseError(Exception exception)
     {
-        return StatusCode(StatusCodes.Status500InternalServerError, new
-        {
-            message = "Terjadi kesalahan saat memproses permintaan.",
-            detail = exception.Message
-        });
+        var (status, code) = ApiErrors.Classify(exception);
+        var message = status == StatusCodes.Status500InternalServerError
+            ? "Terjadi kesalahan internal server."
+            : exception.Message;
+        return StatusCode(status, ApiErrors.Create(HttpContext, code, message));
     }
 }

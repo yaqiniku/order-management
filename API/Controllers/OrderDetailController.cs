@@ -1,6 +1,7 @@
 using Domain.Abstract.Service;
 using Domain.Models;
 using Microsoft.AspNetCore.Mvc;
+using API.Infrastructure;
 
 namespace API.Controllers;
 
@@ -27,7 +28,7 @@ public class OrderDetailController(IOrderDetailService service) : ControllerBase
         try
         {
             var data = await _service.GetRow(id);
-            if (data is null) return NotFound(new { message = $"OrderDetail dengan ID '{id}' tidak ditemukan." });
+            if (data is null) return NotFound(ApiErrors.Create(HttpContext, "not_found", $"OrderDetail dengan ID '{id}' tidak ditemukan."));
             return Ok(new { data });
         }
         catch (Exception ex) { return ResponseError(ex); }
@@ -49,9 +50,9 @@ public class OrderDetailController(IOrderDetailService service) : ControllerBase
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(orderDetail.ID)) throw new Exception("ID order detail wajib diisi.");
+            if (string.IsNullOrWhiteSpace(orderDetail.ID)) throw new ArgumentException("ID order detail wajib diisi.");
             var affectedRows = await _service.Update(orderDetail);
-            if (affectedRows == 0) throw new Exception($"OrderDetail dengan ID '{orderDetail.ID}' tidak ditemukan.");
+            if (affectedRows == 0) throw new KeyNotFoundException($"OrderDetail dengan ID '{orderDetail.ID}' tidak ditemukan.");
             return Ok(new { affectedRows });
         }
         catch (Exception ex) { return ResponseError(ex); }
@@ -62,17 +63,17 @@ public class OrderDetailController(IOrderDetailService service) : ControllerBase
     {
         try
         {
-            if (ids.Length == 0) return BadRequest(new { message = "Minimal satu ID order detail wajib diisi." });
+            if (ids.Length == 0) return BadRequest(ApiErrors.Create(HttpContext, "validation_error", "Minimal satu ID order detail wajib diisi."));
             var affectedRows = await _service.Delete(ids);
             return Ok(new { data = (object?)null, affectedRows });
         }
         catch (Exception ex) { return ResponseError(ex); }
     }
 
-    private ObjectResult ResponseError(Exception exception) =>
-        StatusCode(StatusCodes.Status500InternalServerError, new
-        {
-            message = "Terjadi kesalahan saat memproses permintaan.",
-            detail = exception.Message
-        });
+    private ObjectResult ResponseError(Exception exception)
+    {
+        var (status, code) = ApiErrors.Classify(exception);
+        return StatusCode(status, ApiErrors.Create(HttpContext, code,
+            status == 500 ? "Terjadi kesalahan internal server." : exception.Message));
+    }
 }

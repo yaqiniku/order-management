@@ -1,4 +1,6 @@
 using API.ServiceRegister;
+using API.Infrastructure;
+using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -42,6 +44,17 @@ builder.Configuration.AddEnvironmentVariables();
 builder.Services.AddService(builder.Configuration);
 
 builder.Services.AddControllers();
+builder.Services.Configure<ApiBehaviorOptions>(options =>
+{
+    options.InvalidModelStateResponseFactory = context =>
+    {
+        var message = string.Join("; ", context.ModelState.Values
+            .SelectMany(value => value.Errors)
+            .Select(error => error.ErrorMessage));
+        return new BadRequestObjectResult(
+            ApiErrors.Create(context.HttpContext, "validation_error", message));
+    };
+});
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -58,6 +71,8 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+app.UseMiddleware<RequestTraceMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {

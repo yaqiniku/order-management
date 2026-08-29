@@ -118,6 +118,15 @@ public class Command
 
         foreach (var property in parameters.GetType().GetProperties())
         {
+            // Model domain dapat mempunyai navigation/helper property (contoh: Order.Items)
+            // yang tidak merupakan parameter SQL. Jangan kirim property tersebut ke Npgsql.
+            if (!command.CommandText.Contains(
+                    $"@{property.Name}",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
             var parameter = command.CreateParameter();
             parameter.ParameterName = property.Name;
             parameter.Value = property.GetValue(parameters) ?? DBNull.Value;
